@@ -1,13 +1,29 @@
-import { DataTypes, Model } from 'sequelize';
+import {
+	CreationOptional,
+	DataTypes,
+	InferAttributes,
+	InferCreationAttributes,
+	Model,
+} from 'sequelize';
 
 import sequelize from '@/config/sequelize';
 
-export class User extends Model {}
+export class User extends Model<
+	InferAttributes<User>,
+	InferCreationAttributes<User>
+> {
+	declare id: CreationOptional<string>;
+	declare email: string;
+	declare email_verified: CreationOptional<boolean>;
+	declare name: string;
+	declare avatar_url: CreationOptional<string>;
+	declare role: CreationOptional<'user' | 'admin'>;
+}
 
 User.init(
 	{
 		id: {
-			type: DataTypes.UUIDV4,
+			type: DataTypes.UUID,
 			defaultValue: DataTypes.UUIDV4,
 			primaryKey: true,
 			allowNull: false,

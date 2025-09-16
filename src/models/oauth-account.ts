@@ -1,16 +1,45 @@
-import { DataTypes, Model } from 'sequelize';
+import {
+	CreationOptional,
+	DataTypes,
+	ForeignKey,
+	InferAttributes,
+	InferCreationAttributes,
+	Model,
+} from 'sequelize';
 
 import sequelize from '@/config/sequelize';
 
-export class OAuthAccount extends Model {}
+import { User } from './user';
+
+export class OAuthAccount extends Model<
+	InferAttributes<OAuthAccount>,
+	InferCreationAttributes<OAuthAccount>
+> {
+	declare id: CreationOptional<string>;
+	declare user_id: ForeignKey<User['id']>;
+	declare provider: 'google';
+	declare provider_user_id: string;
+	declare linked_at: CreationOptional<Date>;
+}
 
 OAuthAccount.init(
 	{
 		id: {
-			type: DataTypes.UUIDV4,
+			type: DataTypes.UUID,
 			defaultValue: DataTypes.UUIDV4,
 			primaryKey: true,
 			allowNull: false,
+		},
+
+		user_id: {
+			type: DataTypes.UUID,
+			allowNull: false,
+			references: {
+				model: User,
+				key: 'id',
+			},
+			onDelete: 'CASCADE',
+			onUpdate: 'CASCADE',
 		},
 
 		provider: {
@@ -23,29 +52,14 @@ OAuthAccount.init(
 			allowNull: false,
 		},
 
-		access_token: {
-			type: DataTypes.TEXT,
-			allowNull: true,
-		},
-
-		refresh_token: {
-			type: DataTypes.TEXT,
-			allowNull: true,
-		},
-
-		expires_at: {
-			type: DataTypes.DATE,
-			allowNull: true,
-		},
-
 		linked_at: {
 			type: DataTypes.DATE,
-			allowNull: true,
 			defaultValue: DataTypes.NOW,
+			allowNull: false,
 		},
 	},
 	{
-		tableName: 'oauth_account',
+		tableName: 'oauth_accounts',
 		sequelize: sequelize,
 		underscored: true,
 		indexes: [

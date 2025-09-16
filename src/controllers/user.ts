@@ -14,7 +14,7 @@ const userController: UserController = {
 		res.send('delete user');
 	},
 	getCurrentUserProfile: (req, res) => {
-		res.json(req.session.user);
+		res.json(req.user);
 	},
 };
 
