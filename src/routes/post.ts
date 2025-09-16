@@ -4,6 +4,7 @@ import { postController } from '@/controllers';
 
 const postRouter: Router = Router();
 
+postRouter.get('/', postController.getAllPostsOfUser);
 postRouter.post('/', postController.createPost);
 postRouter.get('/:slug', postController.getPost);
 postRouter.patch('/:slug', postController.updatePost);

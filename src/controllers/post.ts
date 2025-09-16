@@ -2,7 +2,7 @@ import { RequestHandler } from 'express';
 import z from 'zod';
 
 import { Post } from '@/models';
-import { CreatePostSchema } from '@/types/post';
+import { CreatePostSchema, UpdatePostSchema } from '@/types/post';
 import { toSlug } from '@/utils';
 
 const postController: PostController = {
@@ -11,40 +11,84 @@ const postController: PostController = {
 
 		if (validationResult.error) {
 			console.error('Input validation failed:', validationResult.error);
-			res.status(422).json({
+			return res.status(422).json({
 				message: 'Input validation failed',
 				error: z.treeifyError(validationResult.error),
 			});
-			return;
 		}
 
 		const data = validationResult.data;
 		const post = await Post.create({ ...data, slug: toSlug(data.title) });
 
-		res.status(201).json({ message: 'Post created successfully', data: post });
+		return res.status(201).json(post);
 	},
 
 	getPost: async (req, res) => {
 		const { slug } = req.params;
 		const post = await Post.findOne({ where: { slug } });
 		if (post === null) {
-			res.status(404).json({ message: `Post ${slug} not found` });
-			return;
+			return res.status(404).json({ message: `Post ${slug} not found` });
 		}
 
-		res.status(200).json({ message: 'Post found', data: post });
+		return res.status(200).json(post);
 	},
 
-	getAllPostsOfUser: (req, res) => {
-		res.send('get all posts of user');
+	getAllPostsOfUser: async (req, res) => {
+		const posts = await Post.findAll({ where: { author_id: req.user.id } });
+		return res.status(200).json(posts);
 	},
 
-	updatePost: (req, res) => {
-		res.send('update post');
+	updatePost: async (req, res) => {
+		const { slug } = req.params;
+
+		const validationResult = await UpdatePostSchema.safeParseAsync(req.body);
+		if (validationResult.error) {
+			console.error('Input validation failed:', validationResult.error);
+			return res.status(422).json({
+				message: 'Input validation failed',
+				error: z.treeifyError(validationResult.error),
+			});
+		}
+
+		const data = validationResult.data;
+
+		try {
+			const [affectedRows] = await Post.update(data, {
+				where: { author_id: req.user.id, slug },
+			});
+
+			if (affectedRows === 0) {
+				return res
+					.status(404)
+					.json({ message: 'Post not found or not owned by user' });
+			}
+
+			const updatedPost = await Post.findOne({
+				where: { author_id: req.user.id, slug },
+			});
+
+			return res.status(200).json(updatedPost);
+		} catch (error) {
+			console.error('Failed to update post:', error);
+			return res
+				.status(500)
+				.json({ message: `Could not update the post ${slug}`, error });
+		}
 	},
 
-	deletePost: (req, res) => {
-		res.send('delete post');
+	deletePost: async (req, res) => {
+		const { slug } = req.params;
+
+		try {
+			await Post.destroy({ where: { slug, author_id: req.user.id } });
+		} catch (error) {
+			console.error(`Error while deleting post ${slug}`);
+			return res.status(500).json({ message: "Couldn't delete post", error });
+		}
+
+		return res
+			.status(200)
+			.json({ message: `Post ${slug} deleted successfully` });
 	},
 };
 
