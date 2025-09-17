@@ -34,7 +34,7 @@ const postController: PostController = {
 	},
 
 	getAllPostsOfUser: async (req, res) => {
-		const posts = await Post.findAll({ where: { author_id: req.user.id } });
+		const posts = await Post.findAll({ where: { author_id: req.user?.id } });
 		return res.status(200).json(posts);
 	},
 
@@ -54,7 +54,7 @@ const postController: PostController = {
 
 		try {
 			const [affectedRows] = await Post.update(data, {
-				where: { author_id: req.user.id, slug },
+				where: { author_id: req.user?.id, slug },
 			});
 
 			if (affectedRows === 0) {
@@ -64,7 +64,7 @@ const postController: PostController = {
 			}
 
 			const updatedPost = await Post.findOne({
-				where: { author_id: req.user.id, slug },
+				where: { author_id: req.user?.id, slug },
 			});
 
 			return res.status(200).json(updatedPost);
@@ -80,7 +80,7 @@ const postController: PostController = {
 		const { slug } = req.params;
 
 		try {
-			await Post.destroy({ where: { slug, author_id: req.user.id } });
+			await Post.destroy({ where: { slug, author_id: req.user?.id } });
 		} catch (error) {
 			console.error(`Error while deleting post ${slug}`);
 			return res.status(500).json({ message: "Couldn't delete post", error });

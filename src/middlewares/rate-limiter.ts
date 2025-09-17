@@ -1,5 +1,6 @@
 import { rateLimit } from 'express-rate-limit';
 import ms from 'ms';
+import { MemcachedStore } from 'rate-limit-memcached';
 import { RedisStore, SendCommandFn } from 'rate-limit-redis';
 
 import { env } from '@/config/env';
@@ -10,9 +11,8 @@ const sendCommand: SendCommandFn = (...args: string[]) => {
 };
 
 const rateLimiterStores = {
-	global: new RedisStore({
+	global: new MemcachedStore({
 		prefix: 'rl:global:',
-		sendCommand,
 	}),
 	auth: new RedisStore({
 		prefix: 'rl:auth:',

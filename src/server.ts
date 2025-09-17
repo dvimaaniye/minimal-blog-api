@@ -1,9 +1,12 @@
+import errorHandler from 'errorhandler';
 import express, { type Express } from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
 
 import { cors, passport, session } from '@/middlewares';
 import router from '@/routes';
+
+import { env } from './config/env';
 
 const app: Express = express();
 
@@ -15,6 +18,10 @@ app.use(passport());
 app.use(morgan('dev'));
 
 app.use(router);
+
+if (env.NODE_ENV === 'development') {
+	app.use(errorHandler());
+}
 
 export function startServer(port: string | number) {
 	app.listen(port, (error) => {

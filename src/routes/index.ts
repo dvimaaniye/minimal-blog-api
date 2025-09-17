@@ -16,7 +16,7 @@ const router: Router = Router();
 router.use(globalRateLimit);
 router.get('/', (_, res) => res.send('check'));
 router.use('/auth', authRateLimit, authRouter);
-router.use('/api/posts', apiRateLimit, isAuthenticatedGuard, postRouter);
-router.use('/api/users', apiRateLimit, isAuthenticatedGuard, userRouter);
+router.use('/api/posts', isAuthenticatedGuard, apiRateLimit, postRouter);
+router.use('/api/users', isAuthenticatedGuard, apiRateLimit, userRouter);
 
 export default router;

@@ -29,3 +29,14 @@ services:
     restart: always
     ports:
       - "8080:8080"
+
+  memcached:
+    image: memcached:1.6.39-alpine3.22
+    ports:
+      - "11211:11211"
+    restart: always
+    command:
+      - --conn-limit=1024
+      - --memory-limit=64
+      - --threads=4
+      - -vv
