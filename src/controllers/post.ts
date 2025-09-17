@@ -1,12 +1,14 @@
 import { RequestHandler } from 'express';
 import z from 'zod';
 
+import cloudinary from '@/config/cloudinary';
 import { Post } from '@/models';
 import { CreatePostSchema, UpdatePostSchema } from '@/types/post';
-import { toSlug } from '@/utils';
+import { toSlug, uploadToCloudinary } from '@/utils';
 
 const postController: PostController = {
 	createPost: async (req, res) => {
+		console.log(req.file);
 		const validationResult = await CreatePostSchema.safeParseAsync(req.body);
 
 		if (validationResult.error) {
@@ -18,9 +20,29 @@ const postController: PostController = {
 		}
 
 		const data = validationResult.data;
-		const post = await Post.create({ ...data, slug: toSlug(data.title) });
 
-		return res.status(201).json(post);
+		let thumbnailUrl: string | undefined;
+		let thumbnailPublicId: string | undefined;
+
+		try {
+			if (req.file) {
+				const uploadResult = await uploadToCloudinary(req.file);
+				thumbnailUrl = uploadResult.secure_url;
+				thumbnailPublicId = uploadResult.public_id;
+			}
+
+			const post = await Post.create({
+				...data,
+				slug: toSlug(data.title),
+				thumbnail_url: thumbnailUrl,
+				thumbnail_public_id: thumbnailPublicId,
+			});
+
+			return res.status(201).json(post);
+		} catch (error) {
+			console.error('Error in post creation with upload:', error);
+			return res.status(500).json({ message: 'Error creating post', error });
+		}
 	},
 
 	getPost: async (req, res) => {
@@ -77,18 +99,33 @@ const postController: PostController = {
 	},
 
 	deletePost: async (req, res) => {
-		const { slug } = req.params;
-
 		try {
-			await Post.destroy({ where: { slug, author_id: req.user?.id } });
-		} catch (error) {
-			console.error(`Error while deleting post ${slug}`);
-			return res.status(500).json({ message: "Couldn't delete post", error });
-		}
+			const { slug } = req.params;
+			const userId = req.user!.id;
 
-		return res
-			.status(200)
-			.json({ message: `Post ${slug} deleted successfully` });
+			const post = await Post.findOne({
+				where: { slug, author_id: userId },
+			});
+
+			if (!post) {
+				return res.status(404).json({ message: 'Post not found' });
+			}
+
+			if (post.thumbnail_public_id) {
+				await cloudinary.uploader.destroy(post.thumbnail_public_id, {
+					resource_type: 'image',
+				});
+			}
+
+			await post.destroy();
+
+			return res
+				.status(200)
+				.json({ message: 'Post and associated image deleted successfully' });
+		} catch (error) {
+			console.error('Error deleting post:', error);
+			return res.status(500).json({ message: 'Failed to delete post', error });
+		}
 	},
 };
 

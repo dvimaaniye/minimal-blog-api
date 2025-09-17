@@ -20,9 +20,12 @@ export function cache(
 
 			const originalJson = res.json.bind(res);
 			res.json = (body) => {
-				redisClient
-					.setEx(key, ttlSeconds, JSON.stringify(body))
-					.catch(console.error);
+				if (res.statusCode < 400) {
+					redisClient
+						.setEx(key, ttlSeconds, JSON.stringify(body))
+						.catch(console.error);
+				}
+
 				return originalJson(body);
 			};
 

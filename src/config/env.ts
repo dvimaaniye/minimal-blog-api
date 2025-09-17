@@ -34,6 +34,10 @@ export const env = {
 		'API_RATE_LIMIT_WINDOW_MS',
 	) as StringValue,
 	API_RATE_LIMIT_WINDOW_MAX: getEnvVar('API_RATE_LIMIT_WINDOW_MAX'),
+
+	CLOUDINARY_CLOUD_NAME: getEnvVar('CLOUDINARY_CLOUD_NAME'),
+	CLOUDINARY_API_KEY: getEnvVar('CLOUDINARY_API_KEY'),
+	CLOUDINARY_API_SECRET: getEnvVar('CLOUDINARY_API_SECRET'),
 };
 
 function getEnvVar(key: string): string {

@@ -9,10 +9,13 @@ const sequelize = new Sequelize(env.POSTGRES_URI);
 		await sequelize.authenticate();
 		console.log('Database connection setup successfully!');
 
-		try {
-			await sequelize.sync();
-		} catch (error) {
-			console.log("Couldn't sync database", error);
+		if (env.NODE_ENV === 'development') {
+			try {
+				await sequelize.sync({ alter: true });
+				console.log('Database sync successful');
+			} catch (error) {
+				console.error("Couldn't sync database", error);
+			}
 		}
 	} catch (error) {
 		console.error('Unable to connect to the database', error);

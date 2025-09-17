@@ -21,6 +21,7 @@ export class Post extends Model<
 	declare slug: string;
 	declare content: string;
 	declare thumbnail_url?: CreationOptional<string>;
+	declare thumbnail_public_id?: CreationOptional<string>;
 	declare status: CreationOptional<string>;
 	declare published_at: CreationOptional<Date>;
 }
@@ -66,13 +67,22 @@ Post.init(
 			allowNull: true,
 		},
 
+		thumbnail_public_id: {
+			type: DataTypes.TEXT,
+			allowNull: true,
+		},
+
 		status: {
 			type: DataTypes.ENUM('draft', 'published', 'archived'),
 			allowNull: false,
 			defaultValue: 'draft',
 		},
 
-		published_at: DataTypes.DATE,
+		published_at: {
+			type: DataTypes.DATE,
+			allowNull: false,
+			defaultValue: DataTypes.NOW,
+		},
 	},
 	{
 		sequelize: sequelize,
